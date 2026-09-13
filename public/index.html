@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>RAG Chat Demo</title>
+	<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<main class="wrap">
+	<h1>RAG Chat Demo</h1>
+
+	<section class="chat">
+		<div id="messages" class="messages"></div>
+		<form id="query-form">
+			<input id="question-input" type="text" placeholder="Ask a question…" autocomplete="off" required />
+			<button type="submit" id="submit-btn">Ask</button>
+		</form>
+	</section>
+
+	<details class="admin-panel">
+		<summary>Authenticate to add files or delete RAG content (admin)</summary>
+
+		<div id="token-gate">
+			<input id="token-input" type="password" placeholder="Admin token" />
+			<button id="unlock-btn">Unlock</button>
+		</div>
+
+		<div id="upload-area" hidden>
+			<div>Select file for upload to RAG:</div>
+			<input id="file-input" type="file" accept=".md" multiple />
+			<div id="upload-log"></div>
+		</div>
+
+
+	</details>
+		<div id="db-rag-area">
+			<table id="db-rag-table" >
+			<caption>
+				RAG Content
+			</caption>
+			<thead>
+			<tr>
+				<th scope="col">Id</th>
+				<th scope="col">Text snippet</th>
+				<th scope="col">Action</th>
+			</tr>
+			</thead>
+			<tbody>
+			</tbody>
+			</table>
+		</div>
+</main>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

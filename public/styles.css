@@ -1,0 +1,82 @@
+body {
+	font-family: system-ui, sans-serif;
+	background: #0b1220;
+	color: #e7ecf5;
+}
+.wrap {
+	max-width: 700px;
+	margin: 0 auto;
+	padding: 20px;
+}
+.messages {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+.message {
+	padding: 10px 14px;
+	border-radius: 8px;
+	background: #1a2438;
+}
+.message.error {
+	color: #fc8181;
+}
+#query-form {
+	display: flex;
+	gap: 8px;
+}
+#question-input {
+	flex: 1;
+}
+.admin-panel {
+	margin-top: 32px;
+	border-top: 1px solid #26314a;
+	padding-top: 16px;
+}
+
+#upload-area {
+	padding-bottom: 16px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #26314a;
+}
+
+#notes-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 12px;
+}
+
+#notes-table th,
+#notes-table td {
+	padding: 10px 12px;
+	border: 1px solid #26314a;
+	text-align: left;
+}
+
+#notes-table th {
+	background: #1a2438;
+	font-weight: 600;
+}
+
+#notes-table tbody tr:nth-child(even) {
+	background: #131b2c;
+}
+
+#notes-table tbody tr:hover {
+	background: #1a2438;
+}
+
+#notes-table button {
+	background: transparent;
+	border: 1px solid #fc8181;
+	color: #fc8181;
+	border-radius: 6px;
+	padding: 4px 10px;
+	cursor: pointer;
+}
+
+#notes-table button:hover {
+	background: #fc8181;
+	color: #0b1220;
+}

@@ -15,5 +15,9 @@
     "typescript": "^5.5.2",
     "vitest": "~4.1.0",
     "wrangler": "^4.130.0"
+  },
+  "dependencies": {
+    "@langchain/textsplitters": "^1.0.1",
+    "hono": "^4.13.7"
   }
 }
