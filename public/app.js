@@ -42,6 +42,44 @@ function addMessage(role, text) {
 
 // --- Admin panel ---
 
+async function loadNotes(token) {
+	const response = await fetch('/admin/notes', {
+		headers: { Authorization: `Bearer ${token}` }
+	});
+
+	console.log(response);
+
+	const notes  = await response.json();
+
+	const tbody = dbTableEl.tBodies[0];
+	tbody.innerHTML = ''; // clears only the body rows, thead stays intact
+
+	notes.forEach((note) => {
+
+		const newRow = tbody.insertRow(); // insertRow on the tbody itself, not the table — table.insertRow() was landing rows in <thead> instead
+		newRow.insertCell().innerHTML = note.id;
+		newRow.insertCell().innerHTML = note.text.substring(0,39);
+
+		const actionCell = newRow.insertCell();
+		const deleteBtn = document.createElement('button');
+		deleteBtn.textContent = 'Delete';
+		deleteBtn.addEventListener('click', async () => {
+			deleteBtn.disabled = true;
+			const deleteResponse = await fetch(`/admin/notes/${note.id}`, {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (deleteResponse.ok) {
+				newRow.remove();
+			} else {
+				deleteBtn.disabled = false;
+				alert(`Failed to delete note ${note.id}: ${deleteResponse.status}`);
+			}
+		});
+		actionCell.appendChild(deleteBtn);
+	});
+}
+
 async function unlock(token) {
 	sessionStorage.setItem('adminToken', token);
 
@@ -52,37 +90,8 @@ async function unlock(token) {
 		tokenGateEl.hidden = true;
 		uploadAreaEl.hidden = false;
 
-		const response = await fetch('/admin/notes', {
-			headers: { Authorization: `Bearer ${token}` }
-		});
 
-		console.log(response);
-
-		const notes  = await response.json();
-		notes.forEach((note) => {
-
-			const newRow = dbTableEl.insertRow();
-			newRow.insertCell().innerHTML = note.id;
-			newRow.insertCell().innerHTML = note.text.substring(0,39);
-
-			const actionCell = newRow.insertCell();
-			const deleteBtn = document.createElement('button');
-			deleteBtn.textContent = 'Delete';
-			deleteBtn.addEventListener('click', async () => {
-				deleteBtn.disabled = true;
-				const deleteResponse = await fetch(`/admin/notes/${note.id}`, {
-					method: 'DELETE',
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				if (deleteResponse.ok) {
-					newRow.remove();
-				} else {
-					deleteBtn.disabled = false;
-					alert(`Failed to delete note ${note.id}: ${deleteResponse.status}`);
-				}
-			});
-			actionCell.appendChild(deleteBtn);
-		});
+		await loadNotes(token);
 	}
 	else {
 		tokenInputEl.value = '';
@@ -132,4 +141,5 @@ fileInputEl.addEventListener('change', async () => {
 			logLine.textContent += `Error: ${error}`;
 		}
 	}
+	await loadNotes(token);
 });
