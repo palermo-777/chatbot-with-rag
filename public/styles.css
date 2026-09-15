@@ -41,33 +41,33 @@ body {
 	border-bottom: 1px solid #26314a;
 }
 
-#notes-table {
+#db-rag-table {
 	width: 100%;
 	border-collapse: collapse;
 	margin-top: 12px;
 }
 
-#notes-table th,
-#notes-table td {
+#db-rag-table th,
+#db-rag-table td {
 	padding: 10px 12px;
 	border: 1px solid #26314a;
 	text-align: left;
 }
 
-#notes-table th {
+#db-rag-table th {
 	background: #1a2438;
 	font-weight: 600;
 }
 
-#notes-table tbody tr:nth-child(even) {
+#db-rag-table tbody tr:nth-child(even) {
 	background: #131b2c;
 }
 
-#notes-table tbody tr:hover {
+#db-rag-table tbody tr:hover {
 	background: #1a2438;
 }
 
-#notes-table button {
+#db-rag-table button {
 	background: transparent;
 	border: 1px solid #fc8181;
 	color: #fc8181;
@@ -76,7 +76,7 @@ body {
 	cursor: pointer;
 }
 
-#notes-table button:hover {
+#db-rag-table button:hover {
 	background: #fc8181;
 	color: #0b1220;
 }

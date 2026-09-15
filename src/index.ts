@@ -85,7 +85,7 @@ async function LlmWithRag(c: Context<AppEnv>, question: string, contextMessage:s
 		? `You are a helpful assistant. Answer using the context provided.\n\n${contextMessage}`
 		: 'You are a helpful assistant. No relevant notes were found for this question — say so plainly rather than guessing.';
 
-  console.log(`systemPrompt: ${systemPrompt}`)
+  //console.log(`systemPrompt: ${systemPrompt}`)
 	const modelResp = await c.env.AI.run("@cf/qwen/qwen3.8-27b", {
 		messages: [
 			{ role: "system", content: systemPrompt },

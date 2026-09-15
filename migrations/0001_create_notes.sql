@@ -1,1 +1,5 @@
 -- Migration number: 0001 	 2026-09-13T14:53:32.798Z
+CREATE TABLE IF NOT EXISTS notes (
+									 id INTEGER PRIMARY KEY AUTOINCREMENT,
+									 text TEXT NOT NULL
+);
