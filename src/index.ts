@@ -10,6 +10,8 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+export const RELEVANCE_THRESHOLD = 0.68;
+export const TOP_K = 3;
 
 import { WorkflowEntrypoint, WorkflowStep } from "cloudflare:workers";
 import type { WorkflowEvent } from "cloudflare:workers";
@@ -24,7 +26,12 @@ interface RagWorkflowParams {
 	data: string;
 }
 
-async function QueryVector(question: string, c: Context<AppEnv>) {
+export function filterRelevant(matches: VectorizeMatch[], threshold = RELEVANCE_THRESHOLD) {
+	const matchesFiltered:VectorizeMatch[] = matches.filter( (match) => match.score > threshold );
+	return matchesFiltered;
+}
+
+	async function QueryVector(question: string, c: Context<AppEnv>) {
 	const modelResp = await c.env.AI.run(
 		"@cf/baai/bge-base-en-v1.5",
 		{
@@ -37,21 +44,21 @@ async function QueryVector(question: string, c: Context<AppEnv>) {
 	}
 	const vector = modelResp.data[0];
 
-	let matches = await c.env.VECTORIZE.query(vector, { topK: 1 });
-	let notes: string[] = []
+	let { matches } = await c.env.VECTORIZE.query(vector, { topK: TOP_K }); // topK=3 by default
+	let notes: string[] = [];
 
-	if (matches.matches.length > 0 && matches.matches[0]) {
+	matches = filterRelevant(matches);
+	for (const match of matches) {
 		try {
 			const { results } = await c.env.database.prepare(
 				"SELECT text FROM notes WHERE id=?",
 			)
-				.bind(matches.matches[0].id)
+				.bind(match.id)
 				.run();
 
 
-			if (results) {
-				notes = results.map( (vector) => (typeof vector.text === 'string' ? vector.text : ''));
-				//console.log(notes);
+			if (results[0] && typeof results[0].text === 'string') {
+				notes.push(results[0].text);
 			}
 			else {
 				console.log("No matching vector found or vectorQuery.matches is empty");
@@ -60,7 +67,8 @@ async function QueryVector(question: string, c: Context<AppEnv>) {
 		} catch (e) {
 			throw new Error("Failed to get data from D1 DB");
 		}
-	}
+	};
+
 	const contextMessage = notes.length
 		? `Context:\n${notes.map((note) => `- ${note}`).join("\n")}`
 		: "";
@@ -71,9 +79,9 @@ async function QueryVector(question: string, c: Context<AppEnv>) {
 
 async function LlmWithRag(c: Context<AppEnv>, question: string, contextMessage:string) {
 
-	let systemPrompt = "You are helpful assistant."
+	let systemPrompt = "You are a helpful assistant."
 	if (contextMessage.length > 0) {
-		systemPrompt += `When answering the question or responding, use the context provided: ${contextMessage}`;
+		systemPrompt += ` When answering the question or responding, use the context provided: ${contextMessage}`;
 	}
 
 	const modelResp = await c.env.AI.run("@cf/qwen/qwen3.8-27b", {
@@ -161,7 +169,6 @@ app.post("/admin/ingest",
 		if (!data.trim()) {
 			return c.json({ error: 'Request body must contain markdown text' }, 400);
 		}
-		console.log(`Data=${data}`)
 
 		await c.env.RAG_WORKFLOW.create({ params: { data: data } });
 
@@ -197,7 +204,6 @@ app.get("/admin/notes",
 	const query = `SELECT * FROM notes`;
 	let { results } = await c.env.database.prepare(query).run();
 
-  console.log(results);
 	return c.json(results);
 
 	});

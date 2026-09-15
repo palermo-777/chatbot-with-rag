@@ -127,8 +127,7 @@ fileInputEl.addEventListener('change', async () => {
 			body: file, // the File object itself — fetch reads and streams its bytes as the body
 		});
 
-		if (await response.ok) {
-			console.log(await response);
+		if (response.ok) {
 			const result = await response.json();
 			console.log(result);
 			logLine.textContent = `${file.name}: ✓ ${result.message}`;
