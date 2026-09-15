@@ -25,8 +25,8 @@ formEl.addEventListener('submit', async (e) => {
 			addMessage('assistant error', `Request failed (${response.status})`);
 			return;
 		}
-		const { llmAnswer } = await response.json();
-		addMessage('assistant', llmAnswer);
+		const { llmAnswer, citedNoteIds } = await response.json();
+		addMessage('assistant', `${llmAnswer}\n\n (from note #${citedNoteIds.join(', ')})`);
 	} finally {
 		submitBtn.disabled = false;
 	}

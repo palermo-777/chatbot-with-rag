@@ -10,8 +10,8 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
-export const RELEVANCE_THRESHOLD = 0.68;
-export const TOP_K = 3;
+const RELEVANCE_THRESHOLD:number = 0.58;
+const TOP_K:number = 3;
 
 import { WorkflowEntrypoint, WorkflowStep } from "cloudflare:workers";
 import type { WorkflowEvent } from "cloudflare:workers";
@@ -27,7 +27,8 @@ interface RagWorkflowParams {
 }
 
 export function filterRelevant(matches: VectorizeMatch[], threshold = RELEVANCE_THRESHOLD) {
-	const matchesFiltered:VectorizeMatch[] = matches.filter( (match) => match.score > threshold );
+	const matchesFiltered:VectorizeMatch[] = matches.filter( (match) => (match.score > threshold)
+	);
 	return matchesFiltered;
 }
 
@@ -46,19 +47,20 @@ export function filterRelevant(matches: VectorizeMatch[], threshold = RELEVANCE_
 
 	let { matches } = await c.env.VECTORIZE.query(vector, { topK: TOP_K }); // topK=3 by default
 	let notes: string[] = [];
+	let citeIds: number[] = []; // id of chunks used in LLM answer
 
 	matches = filterRelevant(matches);
 	for (const match of matches) {
 		try {
 			const { results } = await c.env.database.prepare(
-				"SELECT text FROM notes WHERE id=?",
+				"SELECT text, id FROM notes WHERE id=?",
 			)
 				.bind(match.id)
 				.run();
 
-
 			if (results[0] && typeof results[0].text === 'string') {
 				notes.push(results[0].text);
+				citeIds.push(Number(results[0].id));
 			}
 			else {
 				console.log("No matching vector found or vectorQuery.matches is empty");
@@ -73,17 +75,17 @@ export function filterRelevant(matches: VectorizeMatch[], threshold = RELEVANCE_
 		? `Context:\n${notes.map((note) => `- ${note}`).join("\n")}`
 		: "";
 
-	return contextMessage;
+	return { contextMessage, citeIds };
 
 }
 
 async function LlmWithRag(c: Context<AppEnv>, question: string, contextMessage:string) {
 
-	let systemPrompt = "You are a helpful assistant."
-	if (contextMessage.length > 0) {
-		systemPrompt += ` When answering the question or responding, use the context provided: ${contextMessage}`;
-	}
+	let systemPrompt = contextMessage.length > 0
+		? `You are a helpful assistant. Answer using the context provided.\n\n${contextMessage}`
+		: 'You are a helpful assistant. No relevant notes were found for this question — say so plainly rather than guessing.';
 
+  console.log(`systemPrompt: ${systemPrompt}`)
 	const modelResp = await c.env.AI.run("@cf/qwen/qwen3.8-27b", {
 		messages: [
 			{ role: "system", content: systemPrompt },
@@ -91,7 +93,6 @@ async function LlmWithRag(c: Context<AppEnv>, question: string, contextMessage:s
 		]
 	}
 	);
-
 
 	const content = modelResp.choices[0]?.message?.content;
 	console.log(`LLM answer:\n${content}`);
@@ -153,10 +154,10 @@ app.get("/api/query", async (c) => {
 		return c.text("specify text in ?text query", 400)
 	}
 
-	const context = await QueryVector(question, c);
-	const answer = await LlmWithRag(c, question, context);
+	const { contextMessage, citeIds } = await QueryVector(question, c);
+	const answer = await LlmWithRag(c, question, contextMessage);
 
-	return c.json({ llmAnswer: answer }, 200);
+	return c.json({ llmAnswer: answer, citedNoteIds: citeIds }, 200);
 
 })
 
